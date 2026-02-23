@@ -13,7 +13,7 @@
 (function() {
     'use strict';
     // Your code here...
-    document.querySelector(".layout__2-sidebars-inline.reference-layout").style.paddingInline = "35px";
+    document.querySelector(".layout__2-sidebars-inline.reference-layout").style.paddingInline = "10px";
     document.querySelector(".layout__right-sidebar.reference-layout__toc").style.justifySelf = "right";
     document.querySelector(".layout__header.reference-layout__header").style.width = "108%";
     document.documentElement.style.setProperty("--layout-content-max", "64rem");
