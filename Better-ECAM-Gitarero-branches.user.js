@@ -5,7 +5,7 @@
 // @description  try to take over the world!
 // @author       You
 // @match        https://gitarero.ecam.fr/baptiste.jacquin/*/graph
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=ecam.fr
+// @icon         https://gitarero.ecam.fr/assets/img/logo.svg
 // @grant        none
 // ==/UserScript==
 
