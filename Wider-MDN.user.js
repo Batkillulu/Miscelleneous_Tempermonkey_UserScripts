@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wider MDN
 // @namespace    http://tampermonkey.net/
-// @version      2026-02-23
+// @version      2026-02-28
 // @description  try to take over the world!
 // @author       You
 // @run-at       document-idle
