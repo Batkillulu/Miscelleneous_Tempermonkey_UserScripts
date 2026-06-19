@@ -131,5 +131,5 @@
 
 
 
-    setTimeout(()=>{getCSSClassCoordInStyleSheet(".max-w-3xl").style.maxWidth = "80%";}, 100);
+    setTimeout(()=>{getCSSClassCoordInStyleSheet(".max-w-3xl").style.maxWidth = "90%";}, 100);
 })();
