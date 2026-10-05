@@ -4,132 +4,91 @@
 // @version      2026-05-10
 // @description  Makes Claude's chat window wider
 // @author       You
-// @match        https://claude.ai/*
+// @run-at       document-idle
+// @match        https://claude.ai/chat/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=claude.ai
 // @grant        none
+// @require      https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.1.0/diff.min.js
 // ==/UserScript==
 
-(function() {
 
-    const getCSSClassCoordInStyleSheet = (_class="") => {
-        let styleSheetIndex = -1, ruleIndex = -1;
-        try {
-            Object.values(document.styleSheets).forEach((_CSSStyleSheet, _styleSheetIndex) => {
-                try {
-                    Object.values(_CSSStyleSheet.cssRules).forEach((_CSSRule, _ruleIndex) => {
-                        try {
-                            if (typeof _class == "string") {
-                                if (_CSSRule.selectorText == _class) {
-                                    ruleIndex = _ruleIndex;
-                                    styleSheetIndex = _styleSheetIndex;
-                                }
-                            }
-                            else if (_class instanceof RegExp) {
-                                if (_CSSRule.selectorText.match(_class)) {
-                                    ruleIndex = _ruleIndex;
-                                    styleSheetIndex = _styleSheetIndex;
-                                }
-                            }
-                        }
-                        catch(e) {
-                            console.warn(_CSSStyleSheet);
-                            console.warn(_CSSRule);
-                            console.warn(e);
-                        }
-                    })
+
+setTimeout(function() {
+    'use strict';
+    debugger;
+
+
+    // First, identify a div containing a width-limiting class
+    var targetClasses = [];
+    const cssObjRegexp = /[\s\t\n]*\{[^\}]*\}/i;
+    const targets = [
+        document.body.querySelector(`div[data-testid="chat-column"]`),
+        document.body.querySelector(`div[data-testid="transcript-list"]`)
+    ];
+
+    targets.forEach(target => {
+        target.classList.forEach(c => {
+            const match = c.match(/max-w-(.+)/);
+            if (match?.[1]) targetClasses.push(match[0]);
+        });
+    });
+
+    if (targetClasses.lenght === 0) console.error("There's a problem with the Wider Claude code, the HTML page has changed structure");
+
+    window._temp_link = [];
+    window._temp_counter = -1;
+
+    // Second, scan through the links to .css files to know which one is responsible of defining the width-limiting class
+    document.body.querySelectorAll(`link[href*=".css"]`).forEach(l => {
+        window._temp_link.push(l);
+        const req = new XMLHttpRequest();
+        const link = l.href;
+
+        req.open("GET", link, true);
+        req.onload = () => {
+            ++window._temp_counter;
+            var css = String(req.responseText);
+
+            targetClasses.forEach(targetClass => {
+                const pattern = "\\."+RegExp.escape(targetClass).replaceAll(/\\(?=([\(\)\[\]\+\,\.])|x2c)/g, "\\\\\\")+"[^\\{]*";
+                const regexp = RegExp(pattern, "gi");
+                const match = css.match(regexp) || [];
+                debugger;
+
+                console.log("Found a match: "+match);
+
+                if (match.length > 0) {
+                    match.forEach(m => {
+                        const replaceToken = RegExp(RegExp.escape(m)+cssObjRegexp.source, "i");
+                        const replaceValue = m+"{max-width:100%;}";
+                        console.log("Replacing the following pattern: ");
+                        console.warn(replaceToken);
+                        console.log("By the following value: ");
+                        console.warn(replaceValue);
+                        console.log("The css loaded indeed matches the replacement pattern: ");
+                        console.warn(css.match(replaceToken));
+
+                        css = css.replace( replaceToken, replaceValue );
+                    });
+
+
+                    console.log(Diff.diffChars(req.responseText, css)/*.filter(o => { if (o.added === true || o.removed === true) return false; else return true; })*/)
+                    const styleSheet = document.createElement("style");
+                    document.body.append(styleSheet);
+                    document.body.lastChild.innerHTML = css;
+                    window._temp_link[window._temp_counter].remove();
                 }
-                catch(e) {
-                    console.warn(_CSSStyleSheet)
-                    console.warn(e);
-                }
-            })
-        }
-        catch(e) {
-            console.warn(e);
-        }
+            });
 
-        if (document?.styleSheets?.[styleSheetIndex]?.cssRules?.[ruleIndex]) {return document?.styleSheets?.[styleSheetIndex]?.cssRules?.[ruleIndex];}
-
-        let foundRule;
-        getLayerNames().forEach(layer => {
-            getRulesInLayer(layer).forEach(rule => {
-                if (rule.selectorText == ".max-w-3xl") foundRule = rule;
-            })
-        })
-
-        return foundRule || null;
-    };
-
-
-
-    const getRulesInLayer = (layerName) => {
-        const results = [];
-
-        for (const sheet of document.styleSheets) {
-            let rules;
-            try {
-                rules = sheet.cssRules; // throws if cross-origin
-            } catch {
-                continue;
+            if (window._temp_link.length === window._temp_counter) {
+                delete window._temp_link;
+                delete window._temp_counter;
             }
+        };
 
-            for (const rule of rules) {
-                collectLayerRules(rule, layerName, results);
-            }
-        }
-
-        return results;
-    };
+        req.send();
+    });
 
 
 
-    const collectLayerRules = (rule, targetLayer, results) => {
-        // @layer block: `@layer utilities { ... }`
-        if (rule instanceof CSSLayerBlockRule) {
-            if (rule.name === targetLayer) {
-                results.push(...rule.cssRules);
-            } else {
-                // layers can be nested — recurse
-                for (const inner of rule.cssRules) {
-                    collectLayerRules(inner, targetLayer, results);
-                }
-            }
-        }
-
-        // @media / @supports / etc. can wrap @layer blocks — recurse into those too
-        if (rule.cssRules) {
-            for (const inner of rule.cssRules) {
-                collectLayerRules(inner, targetLayer, results);
-            }
-        }
-    };
-
-
-
-    const getLayerNames = () => {
-        const names = new Set();
-
-        function walk(rules) {
-            for (const rule of rules) {
-                if (rule instanceof CSSLayerStatementRule) {
-                    rule.nameList.forEach(n => names.add(n));
-                } else if (rule instanceof CSSLayerBlockRule) {
-                    names.add(rule.name);
-                    walk(rule.cssRules);
-                } else if (rule.cssRules) {
-                    walk(rule.cssRules); // @media, @supports, etc.
-                }
-            }
-        }
-
-        for (const sheet of document.styleSheets) {
-            try { walk(sheet.cssRules); } catch {}
-        }
-
-        return [...names];
-    }
-
-
-
-    setTimeout(()=>{getCSSClassCoordInStyleSheet(".max-w-3xl").style.maxWidth = "90%";}, 100);
-})();
+}, 1000);
