@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wider Claude
 // @namespace    http://tampermonkey.net/
-// @version      2026-05-10
+// @version      2026-06-10
 // @description  Makes Claude's chat window wider
 // @author       You
 // @run-at       document-idle
