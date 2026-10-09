@@ -1,14 +1,13 @@
 // ==UserScript==
 // @name         Wider Claude
 // @namespace    http://tampermonkey.net/
-// @version      2026-06-10
+// @version      2026-09-10
 // @description  Makes Claude's chat window wider
 // @author       You
 // @run-at       document-idle
 // @match        https://claude.ai/chat/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=claude.ai
 // @grant        none
-// @require      https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.1.0/diff.min.js
 // ==/UserScript==
 
 
@@ -53,24 +52,15 @@ setTimeout(function() {
                 const regexp = RegExp(pattern, "gi");
                 const match = css.match(regexp) || [];
 
-                console.log("Found a match: "+match);
-
                 if (match.length > 0) {
                     match.forEach(m => {
                         const replaceToken = RegExp(RegExp.escape(m)+cssObjRegexp.source, "i");
                         const replaceValue = m+"{max-width:100%;}";
-                        console.log("Replacing the following pattern: ");
-                        console.warn(replaceToken);
-                        console.log("By the following value: ");
-                        console.warn(replaceValue);
-                        console.log("The css loaded indeed matches the replacement pattern: ");
-                        console.warn(css.match(replaceToken));
 
                         css = css.replace( replaceToken, replaceValue );
                     });
 
 
-                    console.log(Diff.diffChars(req.responseText, css)/*.filter(o => { if (o.added === true || o.removed === true) return false; else return true; })*/)
                     const styleSheet = document.createElement("style");
                     document.body.append(styleSheet);
                     document.body.lastChild.innerHTML = css;
