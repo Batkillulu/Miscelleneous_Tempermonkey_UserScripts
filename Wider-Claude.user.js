@@ -15,7 +15,6 @@
 
 setTimeout(function() {
     'use strict';
-    debugger;
 
 
     // First, identify a div containing a width-limiting class
@@ -53,7 +52,6 @@ setTimeout(function() {
                 const pattern = "\\."+RegExp.escape(targetClass).replaceAll(/\\(?=([\(\)\[\]\+\,\.])|x2c)/g, "\\\\\\")+"[^\\{]*";
                 const regexp = RegExp(pattern, "gi");
                 const match = css.match(regexp) || [];
-                debugger;
 
                 console.log("Found a match: "+match);
 
